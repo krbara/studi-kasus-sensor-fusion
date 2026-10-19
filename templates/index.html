@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sensor Fusion Lab</title>
+<style>
+:root{--bg:#FFFDF8;--ink:#000;--acc:#FFC480;--acc2:#FFE4B5;--mut:#5c5648;--opt:#E8590C;--rad:#1971C2;--fus:#2B8A3E}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--rad);outline-offset:2px}
+header{border-bottom:3px solid var(--ink);background:#fff}
+.bar{max-width:1100px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:20px}
+.logo{font-weight:800;font-size:22px;text-decoration:none;display:flex;gap:8px;align-items:center}
+.logo i{font-style:normal;background:var(--acc);border:2px solid var(--ink);padding:0 6px;box-shadow:3px 3px 0 var(--ink)}
+nav{margin-left:auto;display:flex;gap:18px;font-weight:600}
+nav a{text-decoration:none}nav a:hover{text-decoration:underline}
+main{max-width:1100px;margin:0 auto;padding:48px 20px 64px}
+h1{font-size:clamp(34px,6vw,60px);line-height:1.05;margin:0 0 14px;text-align:center;letter-spacing:-.02em}
+.sub{text-align:center;color:var(--mut);max-width:640px;margin:0 auto 36px}
+.box{background:#fff;border:3px solid var(--ink);box-shadow:8px 8px 0 var(--ink)}
+.form{max-width:860px;margin:0 auto;padding:22px;display:grid;gap:18px}
+.row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.row label{font-weight:700;min-width:130px}
+input[type=range]{flex:1;min-width:180px;accent-color:#000;height:28px}
+.val{font:700 20px ui-monospace,Menlo,monospace;min-width:56px;text-align:right}
+select,button{font:inherit;font-weight:700;border:3px solid var(--ink);background:#fff;padding:8px 14px;cursor:pointer}
+button.go{background:var(--acc);box-shadow:4px 4px 0 var(--ink);padding:10px 26px}
+button:hover{background:var(--acc2)}button.go:hover{background:#ffb35e}
+button:active{transform:translate(3px,3px);box-shadow:none}
+.hint{font-size:14px;color:var(--mut);margin:0}
+#out{margin-top:44px;display:grid;gap:28px}
+.grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:28px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}nav{display:none}}
+.card{background:#fff;border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink)}
+.card h2{margin:0;padding:10px 16px;font-size:18px;border-bottom:3px solid var(--ink);background:var(--acc2);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card h2 button{padding:3px 10px;font-size:14px;border-width:2px;background:#fff}
+.body{padding:16px;overflow-x:auto}
+pre{margin:0;font:14px/1.55 ui-monospace,Menlo,monospace;white-space:pre-wrap}
+.bars{display:grid;gap:14px}
+.bar-row .t{display:flex;justify-content:space-between;font-weight:700;margin-bottom:4px}
+.track{height:26px;border:2px solid var(--ink);background:#fff}
+.fill{height:100%;border-right:2px solid var(--ink);transition:width .25s}
+table{border-collapse:collapse;font:14px ui-monospace,Menlo,monospace}
+td,th{border:2px solid var(--ink);padding:6px 10px;text-align:center}
+th{background:var(--acc2)}
+th.l{text-align:left}
+.patches{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.patch{text-align:center;font-weight:700}
+.patch canvas{width:100%;aspect-ratio:1;image-rendering:pixelated;border:2px solid var(--ink);display:block;margin-top:6px}
+.patch small{display:block;font-weight:500;color:var(--mut);font-size:12px;margin-top:6px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-weight:700;margin-bottom:8px}
+.legend span::before{content:"";display:inline-block;width:22px;height:0;border-top:4px solid var(--c);margin-right:6px;vertical-align:middle}
+@media(max-width:600px){.patches{grid-template-columns:repeat(2,1fr)}}
+footer{border-top:3px solid var(--ink);background:#fff;text-align:center;padding:18px;color:var(--mut);font-size:14px}
+@media(prefers-reduced-motion:reduce){.fill{transition:none}}
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <a class="logo" href="/"><i>SF</i> Sensor Fusion Lab</a>
+  <nav><a href="#out">Hasil</a><a href="#catatan">Catatan jujur</a></nav>
+</div></header>
+
+<main>
+  <h1>Hutan hilang karena apa,<br>bukan hanya di mana.</h1>
+  <p class="sub">Bandingkan model optik, radar, dan gabungan dalam mengenali penyebab deforestasi saat awan menutupi citra satelit.</p>
+
+  <div class="box form">
+    <div class="row">
+      <label for="cloud">Tutupan awan</label>
+      <input id="cloud" type="range" min="0" max="100" value="0">
+      <span class="val" id="cv">0%</span>
+    </div>
+    <div class="row">
+      <label for="mode">Lihat detail</label>
+      <select id="mode">{% for m in modes %}<option value="{{ loop.index0 }}" {{ 'selected' if loop.index0==2 }}>{{ m }}</option>{% endfor %}</select>
+      <button class="go" id="go" type="button">Jalankan</button>
+    </div>
+    <p class="hint">Geser slider untuk mengubah tutupan awan. Jalankan mengganti contoh citra yang ditampilkan.</p>
+  </div>
+
+  <div id="out" hidden>
+    <div class="grid">
+      <section class="card"><h2>Ringkasan <span><button id="copy" type="button">Salin</button> <button id="dl" type="button">Unduh</button></span></h2>
+        <div class="body"><pre id="summary"></pre></div></section>
+      <section class="card"><h2>Akurasi pada tutupan awan ini</h2><div class="body bars" id="bars"></div></section>
+    </div>
+    <section class="card"><h2>Akurasi di semua tingkat tutupan awan</h2>
+      <div class="body"><div class="legend" id="legend"></div><div id="chart"></div></div></section>
+    <div class="grid">
+      <section class="card"><h2>Confusion matrix <span id="cmt"></span></h2><div class="body" id="cm"></div></section>
+      <section class="card"><h2>Contoh citra sintetis (16 × 16 piksel)</h2><div class="body"><div class="patches" id="patches"></div></div></section>
+    </div>
+    <section class="card" id="catatan"><h2>Catatan jujur</h2><div class="body">
+      <p style="margin-top:0">Semua citra di sini sintetis, dibuat dari pola sederhana per penyebab ditambah derau. Data Sentinel-1/2 asli tidak dipakai karena besar dan butuh akun.</p>
+      <p style="margin-bottom:0">Modelnya Random Forest dari scikit-learn pada ringkasan statistik tiap pita, bukan CNN seperti di materi kuliah. Angka akurasi menunjukkan perilaku konsep (optik jatuh saat berawan, radar bertahan), bukan performa di dunia nyata.</p>
+    </div></section>
+  </div>
+</main>
+<footer>Studi kasus pertemuan 6: penyebab langsung deforestasi dari citra satelit dan AI</footer>
+
+<script>
+const $=s=>document.querySelector(s), COL=['#E8590C','#1971C2','#2B8A3E'], DASH=['','6 4','2 3'];
+let D=null, sample=0, t;
+async function run(fresh){
+  if(fresh) sample=Math.floor(Math.random()*40);
+  $('#cv').textContent=$('#cloud').value+'%';
+  const r=await fetch(`/api/run?cloud=${$('#cloud').value}&sample=${sample}`);
+  D=await r.json(); render(); $('#out').hidden=false;
+}
+function pct(v){return (v*100).toFixed(1)+'%'}
+function render(){
+  $('#bars').innerHTML=D.results.map((r,i)=>`<div class="bar-row"><div class="t"><span>${r.mode}</span><span>${pct(r.acc)}</span></div><div class="track"><div class="fill" style="width:${r.acc*100}%;background:${COL[i]}"></div></div></div>`).join('');
+  const m=+$('#mode').value, cm=D.results[m].cm, C=D.classes;
+  let worst=[0,0,0];
+  cm.forEach((row,i)=>row.forEach((n,j)=>{if(i!=j&&n>worst[2])worst=[i,j,n]}));
+  $('#summary').textContent=
+`Sensor Fusion Lab
+Tutupan awan : ${D.cloud}%
+Data uji     : ${D.n_test} patch sintetis (40 per kelas)
+Model        : Random Forest (scikit-learn)
+
+Akurasi
+${D.results.map(r=>'- '+r.mode.padEnd(11)+': '+pct(r.acc)).join('\n')}
+
+Kesalahan terbanyak (${D.results[m].mode}):
+${worst[2]?`${C[worst[0]]} terbaca ${C[worst[1]]} (${worst[2]} patch)`:'tidak ada'}`;
+  $('#legend').innerHTML=D.results.map((r,i)=>`<span style="--c:${COL[i]}">${r.mode}</span>`).join('');
+  $('#chart').innerHTML=chart();
+  $('#cmt').textContent=D.results[m].mode;
+  $('#cm').innerHTML=`<table><tr><th class="l">Benar \\ Tebakan</th>${C.map(c=>`<th>${c}</th>`).join('')}</tr>`+
+    cm.map((row,i)=>`<tr><th class="l">${C[i]}</th>${row.map((n,j)=>{const a=n/40;return `<td style="background:rgba(255,160,60,${a});font-weight:${i==j?800:500}">${n}</td>`}).join('')}</tr>`).join('')+'</table>';
+  $('#patches').innerHTML=D.previews.map((p,i)=>`<div class="patch">${p.cls}<canvas width="16" height="16" data-i="${i}" data-k="optical"></canvas><small>optik</small><canvas width="16" height="16" data-i="${i}" data-k="radar"></canvas><small>radar</small></div>`).join('');
+  document.querySelectorAll('.patch canvas').forEach(cv=>{
+    const d=D.previews[cv.dataset.i][cv.dataset.k], ctx=cv.getContext('2d'), im=ctx.createImageData(16,16);
+    for(let p=0;p<256;p++){im.data[p*4]=d[p*3];im.data[p*4+1]=d[p*3+1];im.data[p*4+2]=d[p*3+2];im.data[p*4+3]=255}
+    ctx.putImageData(im,0,0);
+  });
+}
+function chart(){
+  const W=640,H=250,L=46,R=14,T=12,B=36,x=v=>L+v/100*(W-L-R),y=v=>T+(1-v)*(H-T-B);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Akurasi tiap mode terhadap tutupan awan" style="max-width:${W}px">`;
+  for(let v=0;v<=1;v+=.25)s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#ccc"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="12">${v*100}%</text>`;
+  for(let v=0;v<=100;v+=25)s+=`<text x="${x(v)}" y="${H-14}" text-anchor="middle" font-size="12">${v}%</text>`;
+  s+=`<text x="${(L+W-R)/2}" y="${H-1}" text-anchor="middle" font-size="12">tutupan awan</text><rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}" fill="none" stroke="#000" stroke-width="2"/>`;
+  D.curve.y.forEach((ys,i)=>{s+=`<polyline fill="none" stroke="${COL[i]}" stroke-width="3" stroke-dasharray="${DASH[i]}" points="${D.curve.x.map((c,j)=>x(c)+','+y(ys[j])).join(' ')}"/>`});
+  return s+`<line x1="${x(D.cloud)}" x2="${x(D.cloud)}" y1="${T}" y2="${H-B}" stroke="#000" stroke-width="2" stroke-dasharray="3 3"/></svg>`;
+}
+$('#cloud').addEventListener('input',()=>{$('#cv').textContent=$('#cloud').value+'%';clearTimeout(t);t=setTimeout(()=>run(false),120)});
+$('#mode').addEventListener('change',()=>D&&render());
+$('#go').addEventListener('click',()=>run(true));
+$('#copy').addEventListener('click',async e=>{await navigator.clipboard.writeText($('#summary').textContent);e.target.textContent='Tersalin';setTimeout(()=>e.target.textContent='Salin',1500)});
+$('#dl').addEventListener('click',()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([$('#summary').textContent],{type:'text/plain'}));a.download='ringkasan.txt';a.click()});
+run(true);
+</script>
+</body>
+</html>
